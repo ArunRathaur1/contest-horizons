@@ -1,16 +1,36 @@
 
 import { useState, useEffect } from 'react';
-import { 
-  getContests, 
-  getBookmarkedContests 
-} from '../utils/api';
-import { Contest, FilterState, ContestStatus } from '../utils/types';
 import Navbar from '../components/Navbar';
 import FilterBar from '../components/FilterBar';
 import ContestCard from '../components/ContestCard';
 import EmptyState from '../components/EmptyState';
 
-const Index = () => {
+// Define types
+export enum ContestStatus {
+  UPCOMING = 'UPCOMING',
+  ONGOING = 'ONGOING',
+  PAST = 'PAST'
+}
+
+export interface Contest {
+  id: string;
+  platform: string;
+  name: string;
+  url: string;
+  startTime: string;
+  endTime: string;
+  duration: number;
+  status: ContestStatus;
+  isBookmarked: boolean;
+}
+
+export interface FilterState {
+  platforms: string[];
+  status: ContestStatus[];
+  searchQuery: string;
+}
+
+function App() {
   const [contests, setContests] = useState<Contest[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<FilterState>({
@@ -18,28 +38,114 @@ const Index = () => {
     status: [],
     searchQuery: ''
   });
+  const [bookmarks, setBookmarks] = useState<string[]>([]);
   
-  // Fetch contests
-  useEffect(() => {
-    const fetchContests = async () => {
-      try {
-        setLoading(true);
-        const contestsData = await getContests();
-        setContests(contestsData);
-      } catch (error) {
-        console.error('Error fetching contests:', error);
-      } finally {
-        setLoading(false);
+  const fetchContests = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch contests from the CodeChef API
+      const response = await fetch('https://codechef-api.vercel.app/contests');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch contests');
       }
-    };
-    
+      
+      const data = await response.json();
+      
+      // Process the data
+      const processedContests: Contest[] = [];
+      
+      // Process ongoing contests
+      data.ongoing_contests.forEach((contest: any) => {
+        processedContests.push({
+          id: `codechef-${contest.contest_code}`,
+          platform: 'CodeChef',
+          name: contest.contest_name,
+          url: `https://www.codechef.com/${contest.contest_code}`,
+          startTime: new Date(contest.contest_start_date).toISOString(),
+          endTime: new Date(contest.contest_end_date).toISOString(),
+          duration: (new Date(contest.contest_end_date).getTime() - new Date(contest.contest_start_date).getTime()) / 1000,
+          status: ContestStatus.ONGOING,
+          isBookmarked: bookmarks.includes(`codechef-${contest.contest_code}`)
+        });
+      });
+      
+      // Process upcoming contests
+      data.future_contests.forEach((contest: any) => {
+        processedContests.push({
+          id: `codechef-${contest.contest_code}`,
+          platform: 'CodeChef',
+          name: contest.contest_name,
+          url: `https://www.codechef.com/${contest.contest_code}`,
+          startTime: new Date(contest.contest_start_date).toISOString(),
+          endTime: new Date(contest.contest_end_date).toISOString(),
+          duration: (new Date(contest.contest_end_date).getTime() - new Date(contest.contest_start_date).getTime()) / 1000,
+          status: ContestStatus.UPCOMING,
+          isBookmarked: bookmarks.includes(`codechef-${contest.contest_code}`)
+        });
+      });
+      
+      // Process past contests
+      data.past_contests.forEach((contest: any) => {
+        processedContests.push({
+          id: `codechef-${contest.contest_code}`,
+          platform: 'CodeChef',
+          name: contest.contest_name,
+          url: `https://www.codechef.com/${contest.contest_code}`,
+          startTime: new Date(contest.contest_start_date).toISOString(),
+          endTime: new Date(contest.contest_end_date).toISOString(),
+          duration: (new Date(contest.contest_end_date).getTime() - new Date(contest.contest_start_date).getTime()) / 1000,
+          status: ContestStatus.PAST,
+          isBookmarked: bookmarks.includes(`codechef-${contest.contest_code}`)
+        });
+      });
+      
+      setContests(processedContests);
+    } catch (error) {
+      console.error("Error fetching contests:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchContests();
+    
+    // Load bookmarks from localStorage
+    const savedBookmarks = localStorage.getItem('contestBookmarks');
+    if (savedBookmarks) {
+      setBookmarks(JSON.parse(savedBookmarks));
+    }
+    
+    // Set up a refresh interval (every 5 minutes)
+    const refreshInterval = setInterval(fetchContests, 5 * 60 * 1000);
+    
+    return () => clearInterval(refreshInterval);
   }, []);
   
+  // Update contests when bookmarks change
+  useEffect(() => {
+    setContests(prevContests => 
+      prevContests.map(contest => ({
+        ...contest,
+        isBookmarked: bookmarks.includes(contest.id)
+      }))
+    );
+    
+    // Save bookmarks to localStorage
+    localStorage.setItem('contestBookmarks', JSON.stringify(bookmarks));
+  }, [bookmarks]);
+  
   // Handle bookmark toggle
-  const handleBookmarkToggle = () => {
-    // Refresh contests with updated bookmark status
-    getContests().then(data => setContests(data));
+  const handleBookmarkToggle = (contestId: string) => {
+    setBookmarks(prevBookmarks => {
+      if (prevBookmarks.includes(contestId)) {
+        return prevBookmarks.filter(id => id !== contestId);
+      } else {
+        return [...prevBookmarks, contestId];
+      }
+    });
   };
   
   // Apply filters to contests
@@ -102,7 +208,7 @@ const Index = () => {
         <div className="py-6">
           <h1 className="text-3xl font-bold mb-1 animate-fade-in">Contest Horizons</h1>
           <p className="text-gray-600 dark:text-gray-400 mb-6 animate-fade-in">
-            Track, filter, and bookmark programming contests from top platforms.
+            Track, filter, and bookmark CodeChef programming contests.
           </p>
           
           <FilterBar filters={filters} setFilters={setFilters} />
@@ -127,7 +233,7 @@ const Index = () => {
                       <ContestCard 
                         key={contest.id}
                         contest={contest}
-                        onBookmarkToggle={handleBookmarkToggle}
+                        onBookmarkToggle={() => handleBookmarkToggle(contest.id)}
                         index={index}
                       />
                     ))}
@@ -146,7 +252,7 @@ const Index = () => {
                       <ContestCard 
                         key={contest.id}
                         contest={contest}
-                        onBookmarkToggle={handleBookmarkToggle}
+                        onBookmarkToggle={() => handleBookmarkToggle(contest.id)}
                         index={index}
                       />
                     ))}
@@ -165,7 +271,7 @@ const Index = () => {
                       <ContestCard 
                         key={contest.id}
                         contest={contest}
-                        onBookmarkToggle={handleBookmarkToggle}
+                        onBookmarkToggle={() => handleBookmarkToggle(contest.id)}
                         index={index}
                       />
                     ))}
@@ -178,6 +284,6 @@ const Index = () => {
       </main>
     </div>
   );
-};
+}
 
-export default Index;
+export default App;
