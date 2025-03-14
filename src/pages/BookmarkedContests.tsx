@@ -27,10 +27,16 @@ const BookmarkedContests = () => {
   }, []);
   
   // Handle bookmark toggle
-  const handleBookmarkToggle = () => {
-    // Refresh bookmarked contests
-    const contests = getBookmarkedContests();
-    setBookmarkedContests(contests);
+  const handleBookmarkToggle = (contestId: string) => {
+    // Remove from bookmarks
+    setBookmarkedContests(prevContests => {
+      const updatedContests = prevContests.filter(contest => contest.id !== contestId);
+      
+      // Update localStorage
+      localStorage.setItem('bookmarkedContests', JSON.stringify(updatedContests));
+      
+      return updatedContests;
+    });
   };
   
   // Apply filters to contests
@@ -121,7 +127,7 @@ const BookmarkedContests = () => {
                 <ContestCard 
                   key={contest.id}
                   contest={contest}
-                  onBookmarkToggle={handleBookmarkToggle}
+                  onBookmarkToggle={() => handleBookmarkToggle(contest.id)}
                   index={index}
                 />
               ))}

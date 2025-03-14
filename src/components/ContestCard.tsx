@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Contest, Platform } from '../utils/types';
+import { Contest } from '../utils/types';
 import { 
   Clock, Calendar, ExternalLink, BookmarkIcon, Youtube, 
   BookmarkCheck
@@ -42,6 +42,11 @@ const ContestCard = ({ contest, onBookmarkToggle, index }: ContestCardProps) => 
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100';
     }
+  };
+  
+  const handleBookmarkClick = () => {
+    toggleBookmark(contest);
+    onBookmarkToggle();
   };
   
   return (
@@ -119,10 +124,7 @@ const ContestCard = ({ contest, onBookmarkToggle, index }: ContestCardProps) => 
             )}
             
             <button 
-              onClick={() => {
-                toggleBookmark(contest);
-                onBookmarkToggle();
-              }}
+              onClick={handleBookmarkClick}
               className={`transition-all duration-300 ${
                 contest.isBookmarked 
                   ? 'text-yellow-500 hover:text-yellow-600' 
