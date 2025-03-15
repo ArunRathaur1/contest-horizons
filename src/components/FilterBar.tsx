@@ -1,7 +1,25 @@
+
 import { useState, useEffect } from "react";
 import { SearchIcon, FilterIcon, X } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const FilterBar = ({ filters, setFilters }) => {
+interface FilterBarProps {
+  filters: {
+    platforms: string[];
+    status: string[];
+    searchQuery: string;
+  };
+  setFilters: (filters: {
+    platforms: string[];
+    status: string[];
+    searchQuery: string;
+  }) => void;
+}
+
+const FilterBar = ({ filters, setFilters }: FilterBarProps) => {
   const [searchQuery, setSearchQuery] = useState(filters.searchQuery);
 
   useEffect(() => {
@@ -10,9 +28,9 @@ const FilterBar = ({ filters, setFilters }) => {
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [searchQuery]);
+  }, [searchQuery, filters, setFilters]);
 
-  const togglePlatform = (platform) => {
+  const togglePlatform = (platform: string) => {
     const updatedPlatforms = filters.platforms.includes(platform)
       ? filters.platforms.filter((p) => p !== platform)
       : [...filters.platforms, platform];
@@ -20,7 +38,7 @@ const FilterBar = ({ filters, setFilters }) => {
     setFilters({ ...filters, platforms: updatedPlatforms });
   };
 
-  const toggleStatus = (status) => {
+  const toggleStatus = (status: string) => {
     const updatedStatus = filters.status.includes(status)
       ? filters.status.filter((s) => s !== status)
       : [...filters.status, status];
@@ -39,72 +57,100 @@ const FilterBar = ({ filters, setFilters }) => {
     filters.searchQuery;
 
   return (
-    <div className="animate-fade-in w-full mb-6 space-y-4">
-      <div className="relative">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <SearchIcon className="h-5 w-5 text-gray-400" />
-        </div>
-        <input
-          type="text"
-          className="pl-10 w-full h-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-          placeholder="Search contests..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-        {searchQuery && (
-          <button
-            className="absolute inset-y-0 right-0 pr-3 flex items-center"
-            onClick={() => setSearchQuery("")}
-          >
-            <X className="h-5 w-5 text-gray-400 hover:text-gray-500" />
-          </button>
-        )}
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="flex items-center space-x-1 text-sm font-medium text-gray-500 dark:text-gray-400">
-          <FilterIcon className="h-4 w-4" />
-          <span>Filters:</span>
+    <Card className="p-4 mb-6">
+      <div className="space-y-4">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <SearchIcon className="h-5 w-5 text-gray-400" />
+          </div>
+          <input
+            type="text"
+            className="pl-10 w-full h-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            placeholder="Search contests..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button
+              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              onClick={() => setSearchQuery("")}
+            >
+              <X className="h-5 w-5 text-gray-400 hover:text-gray-500" />
+            </button>
+          )}
         </div>
 
-        {["Codeforces", "CodeChef", "LeetCode"].map((platform) => (
-          <button
-            key={platform}
-            className={`px-3 py-1 text-sm rounded-full transition-all ${
-              filters.platforms.includes(platform)
-                ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100"
-                : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700"
-            }`}
-            onClick={() => togglePlatform(platform)}
-          >
-            {platform}
-          </button>
-        ))}
+        <div className="space-y-2">
+          <div className="flex items-center space-x-1 text-sm font-medium text-gray-500 dark:text-gray-400">
+            <FilterIcon className="h-4 w-4" />
+            <span>Platform Filters:</span>
+          </div>
+          
+          <div className="flex flex-wrap gap-3">
+            {["Codeforces", "CodeChef", "LeetCode"].map((platform) => (
+              <div key={platform} className="flex items-center space-x-2">
+                <Checkbox 
+                  id={`platform-${platform}`}
+                  checked={filters.platforms.includes(platform)}
+                  onCheckedChange={() => togglePlatform(platform)}
+                />
+                <label 
+                  htmlFor={`platform-${platform}`}
+                  className="text-sm font-medium cursor-pointer"
+                >
+                  {platform}
+                </label>
+              </div>
+            ))}
+          </div>
+        </div>
 
-        {["UPCOMING", "ONGOING", "PAST"].map((status) => (
-          <button
-            key={status}
-            className={`px-3 py-1 text-sm rounded-full transition-all ${
-              filters.status.includes(status)
-                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100"
-                : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700"
-            }`}
-            onClick={() => toggleStatus(status)}
-          >
-            {status.charAt(0) + status.slice(1).toLowerCase()}
-          </button>
-        ))}
+        <div className="space-y-2">
+          <div className="flex items-center space-x-1 text-sm font-medium text-gray-500 dark:text-gray-400">
+            <span>Contest Status:</span>
+          </div>
+          
+          <Tabs defaultValue="all" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger 
+                value="all" 
+                onClick={() => setFilters({ ...filters, status: [] })}
+                className={filters.status.length === 0 ? "bg-primary text-primary-foreground" : ""}
+              >
+                All
+              </TabsTrigger>
+              <TabsTrigger 
+                value="upcoming" 
+                onClick={() => setFilters({ ...filters, status: ["UPCOMING"] })}
+                className={filters.status.includes("UPCOMING") ? "bg-primary text-primary-foreground" : ""}
+              >
+                Upcoming
+              </TabsTrigger>
+              <TabsTrigger 
+                value="past" 
+                onClick={() => setFilters({ ...filters, status: ["PAST"] })}
+                className={filters.status.includes("PAST") ? "bg-primary text-primary-foreground" : ""}
+              >
+                Past
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
 
         {hasActiveFilters && (
-          <button
-            className="px-3 py-1 text-sm rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100 hover:bg-red-200 dark:hover:bg-red-800 transition-all"
-            onClick={clearFilters}
-          >
-            Clear All
-          </button>
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearFilters}
+              className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
+            >
+              Clear All Filters
+            </Button>
+          </div>
         )}
       </div>
-    </div>
+    </Card>
   );
 };
 

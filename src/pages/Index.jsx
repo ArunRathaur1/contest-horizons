@@ -1,11 +1,9 @@
+
 import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
-import CodeForces from "../components/cardcodeforces";
-import ContestLoadingSkeleton from "./contestloading";
-import CodeChef_past from "../components/codechefcard";
-import Codechef_upcomming from '../components/codechefupcomming';
-import LeetcodeUpcooming from '../components/leetcodeupcomming';
-import PastContestCard from '../components/leetcodepast';
+import FilterBar from "../components/FilterBar";
+import ContestList from "../components/ContestList";
+import { filterContests } from "../utils/filterUtils";
 
 const API_URLS = {
   codeforces: "http://localhost:5000/api/contest/codeforces",
@@ -22,6 +20,26 @@ function Contests() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [filters, setFilters] = useState({
+    platforms: [],
+    status: [],
+    searchQuery: "",
+  });
+
+  // Bookmark states (local storage in this example)
+  const [bookmarks, setBookmarks] = useState(() => {
+    const saved = localStorage.getItem("contestBookmarks");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const toggleBookmark = (contestId) => {
+    const newBookmarks = bookmarks.includes(contestId)
+      ? bookmarks.filter(id => id !== contestId)
+      : [...bookmarks, contestId];
+    
+    setBookmarks(newBookmarks);
+    localStorage.setItem("contestBookmarks", JSON.stringify(newBookmarks));
+  };
 
   useEffect(() => {
     async function fetchContests() {
@@ -35,22 +53,33 @@ function Contests() {
           fetch(API_URLS.codechef).then((res) => res.json()),
         ]);
 
-        console.log("Codeforces API Response:", cfRes);
-        console.log("LeetCode API Response:", lcRes);
-        console.log("CodeChef API Response:", ccRes);
+        // Add bookmark status to contests
+        const processContests = (contestArray, isBookmarked) => {
+          return contestArray.map(contest => ({
+            ...contest,
+            id: contest.id || `${contest.name || contest.contestName}-${contest.startTime || contest.time}`,
+            isBookmarked: isBookmarked(contest)
+          }));
+        };
+
+        const isBookmarked = (contest) => {
+          const contestId = contest.id || `${contest.name || contest.contestName}-${contest.startTime || contest.time}`;
+          return bookmarks.includes(contestId);
+        };
 
         setContests({
-          codeforces: cfRes.success
-            ? { upcoming: cfRes.upcomingContests || [], past: cfRes.pastContests || [] }
-            : { upcoming: [], past: [] },
-
-          leetcode: lcRes.success
-            ? { upcoming: lcRes.upcomingContests || [], past: lcRes.pastContests || [] }
-            : { upcoming: [], past: [] },
-
-          codechef: ccRes.success
-            ? { upcoming: ccRes.upcomingContests || [], past: ccRes.pastContests || [] }
-            : { upcoming: [], past: [] },
+          codeforces: {
+            upcoming: cfRes.success ? processContests(cfRes.upcomingContests || [], isBookmarked) : [],
+            past: cfRes.success ? processContests(cfRes.pastContests || [], isBookmarked) : [],
+          },
+          leetcode: {
+            upcoming: lcRes.success ? processContests(lcRes.upcomingContests || [], isBookmarked) : [],
+            past: lcRes.success ? processContests(lcRes.pastContests || [], isBookmarked) : [],
+          },
+          codechef: {
+            upcoming: ccRes.success ? processContests(ccRes.upcomingContests || [], isBookmarked) : [],
+            past: ccRes.success ? processContests(ccRes.pastContests || [], isBookmarked) : [],
+          },
         });
       } catch (err) {
         setError("Failed to load contests.");
@@ -61,118 +90,85 @@ function Contests() {
     }
 
     fetchContests();
-  }, []);
+  }, [bookmarks]);
 
-  // Function to render contests section
-  const renderContestSection = (title, data, Component, emptyMessage = "No contests found.") => (
-    <>
-      <h2 className="text-3xl font-bold mb-4">{title}</h2>
-      {loading ? (
-        <ContestLoadingSkeleton />
-      ) : data.length > 0 ? (
-        data.map((contest, index) => (
-          <Component key={index} contest={contest} />
-        ))
-      ) : (
-        <p className="text-gray-500">{emptyMessage}</p>
-      )}
-    </>
+  // Apply filters
+  const filteredContests = filterContests(
+    contests,
+    filters.platforms,
+    filters.status,
+    filters.searchQuery
   );
-
-  // Function to render contests section for LeetCode (different prop pattern)
-  const renderLeetcodePast = (title, data, Component, emptyMessage = "No contests found.") => (
-    <>
-      <h2 className="text-3xl font-bold mb-4">{title}</h2>
-      {loading ? (
-        <ContestLoadingSkeleton />
-      ) : data.length > 0 ? (
-        data.map((contest, index) => (
-          <Component key={index} {...contest} />
-        ))
-      ) : (
-        <p className="text-gray-500">{emptyMessage}</p>
-      )}
-    </>
-  );
-
-  const renderLeetCodeupcomming = (title, data, Component, emptyMessage = "No contests found.") => (
-  <>
-    <h2 className="text-3xl font-bold mb-4">{title}</h2>
-    {loading ? (
-      <ContestLoadingSkeleton />
-    ) : data.length > 0 ? (
-      data.map((contest, index) => (
-        <Component key={index} contest={contest} />
-      ))
-    ) : (
-      <p className="text-gray-500">{emptyMessage}</p>
-    )}
-  </>
-);
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navbar />
 
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Codeforces Section */}
-        <div className="mb-12">
-          {renderContestSection(
-            "Upcoming Codeforces Contests",
-            contests.codeforces.upcoming,
-            CodeForces,
-            "No upcoming Codeforces contests found."
-          )}
-          
-          {renderContestSection(
-            "Past Codeforces Contests",
-            contests.codeforces.past,
-            CodeForces,
-            "No past Codeforces contests found."
-          )}
-        </div>
-
-        {/* LeetCode Section */}
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-6">Competitive Programming Contests</h1>
         
-        <div className="mb-12">
-          {renderLeetCodeupcomming(
-            "Upcoming LeetCode Contests",
-            contests.leetcode.upcoming,
-            LeetcodeUpcooming,
-            "No upcoming LeetCode contests found."
-          )}
-          
-          {renderLeetcodePast(
-            "Past LeetCode Contests",
-            contests.leetcode.past,
-            PastContestCard,
-            "No past LeetCode contests found."
-          )}
-        </div>
+        <FilterBar filters={filters} setFilters={setFilters} />
 
-        {/* CodeChef Section */}
-        <div className="mb-12">
-          {renderContestSection(
-            "Upcoming CodeChef Contests",
-            contests.codechef.upcoming,
-            Codechef_upcomming,
-            "No upcoming CodeChef contests found."
-          )}
-          
-          {renderContestSection(
-            "Past CodeChef Contests",
-            contests.codechef.past,
-            CodeChef_past,
-            "No past CodeChef contests found."
-          )}
-        </div>
-
-        {/* Display error if any */}
+        {/* Error message if any */}
         {error && (
-          <div className="mt-4 p-4 bg-red-100 text-red-700 rounded-md">
+          <div className="mb-6 p-4 bg-red-100 text-red-700 rounded-md">
             {error}
           </div>
         )}
+
+        {/* Upcoming Contests */}
+        <ContestList
+          title="Upcoming Codeforces Contests"
+          contests={filteredContests.codeforces.upcoming}
+          loading={loading}
+          platform="codeforces"
+          emptyMessage="No upcoming Codeforces contests found."
+          onBookmarkToggle={toggleBookmark}
+        />
+
+        <ContestList
+          title="Upcoming LeetCode Contests"
+          contests={filteredContests.leetcode.upcoming}
+          loading={loading}
+          platform="leetcode"
+          emptyMessage="No upcoming LeetCode contests found."
+        />
+
+        <ContestList
+          title="Upcoming CodeChef Contests"
+          contests={filteredContests.codechef.upcoming}
+          loading={loading}
+          platform="codechef"
+          emptyMessage="No upcoming CodeChef contests found."
+          onBookmarkToggle={toggleBookmark}
+        />
+
+        {/* Past Contests */}
+        <ContestList
+          title="Past Codeforces Contests"
+          contests={filteredContests.codeforces.past}
+          loading={loading}
+          platform="codeforces"
+          emptyMessage="No past Codeforces contests found."
+          onBookmarkToggle={toggleBookmark}
+        />
+
+        <ContestList
+          title="Past LeetCode Contests"
+          contests={filteredContests.leetcode.past}
+          loading={loading}
+          platform="leetcode"
+          emptyMessage="No past LeetCode contests found."
+        />
+
+        <ContestList
+          title="Past CodeChef Contests"
+          contests={filteredContests.codechef.past}
+          loading={loading}
+          platform="codechef"
+          emptyMessage="No past CodeChef contests found."
+          onBookmarkToggle={toggleBookmark}
+        />
       </div>
     </div>
   );
