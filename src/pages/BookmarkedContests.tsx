@@ -1,7 +1,5 @@
 
 import { useState, useEffect } from 'react';
-import { getBookmarkedContests } from '../utils/api';
-import { Contest, FilterState } from '../utils/types';
 import Navbar from '../components/Navbar';
 import FilterBar from '../components/FilterBar';
 import ContestCard from '../components/ContestCard';
@@ -10,9 +8,9 @@ import { BookmarkCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const BookmarkedContests = () => {
-  const [bookmarkedContests, setBookmarkedContests] = useState<Contest[]>([]);
+  const [bookmarkedContests, setBookmarkedContests] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<FilterState>({
+  const [filters, setFilters] = useState({
     platforms: [],
     status: [],
     searchQuery: ''
@@ -21,8 +19,7 @@ const BookmarkedContests = () => {
   // Fetch bookmarked contests
   useEffect(() => {
     setLoading(true);
-    const contests = getBookmarkedContests();
-    setBookmarkedContests(contests);
+    const contests ="";
     setLoading(false);
   }, []);
   
