@@ -11,7 +11,7 @@ interface LoginFormData {
   password: string;
 }
 
-const Login = () => {
+const Login = (props) => {
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
     password: "",

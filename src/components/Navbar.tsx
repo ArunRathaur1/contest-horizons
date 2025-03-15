@@ -60,6 +60,9 @@ const Navbar = () => {
                 <span>Bookmarks</span>
               </div>
             </Link>
+            <Link to='/'>
+                <span>Logout</span>
+            </Link>
           </nav>
         </div>
       </div>
