@@ -1,6 +1,6 @@
 import React from "react";
 
-function CodeChefUpcoming( contest ) {
+function CodeChefUpcoming( {contest} ) {
   return (
     <div className="bg-white shadow-md rounded-lg p-4 mb-4">
       <h3 className="text-lg font-bold text-blue-600">{contest.name}</h3>

@@ -1,23 +1,42 @@
-const ContestCard = (contest ) => {
+import React from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { CalendarIcon, Clock, LinkIcon } from "lucide-react";
+
+const LeetcodeUpcoming = ({ contest }) => {
+  // If contest is passed directly as props rather than as an object
+  if (!contest) {
+    return null;
+  }
+
+  const { contestName, startsIn, time, contestLink } = contest;
+  console.log(contest);
   return (
-    <div className="bg-white shadow-lg rounded-2xl p-4 w-80 text-center border border-gray-200">
-      <h2 className="text-lg font-semibold text-gray-800">
-        {contest.contestName}
-      </h2>
-      <p className="text-sm text-gray-500 mt-1">{contest.time}</p>
-      <p className="text-md font-medium text-blue-600 mt-2">
-        Starts In: {contest.startsIn}
-      </p>
-      <a
-        href={contest.contestLink}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-4 inline-block bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
-      >
-        Join Contest
-      </a>
-    </div>
+    <Card className="w-96 p-4 border border-gray-200 shadow-md rounded-2xl mb-4">
+      <CardContent>
+        <h2 className="text-xl font-semibold text-gray-800">{contestName}</h2>
+
+        <div className="flex items-center mt-2 text-gray-600">
+          <Clock className="w-5 h-5 mr-2" />
+          <span>Starts in: {startsIn}</span>
+        </div>
+
+        <div className="flex items-center mt-2 text-gray-600">
+          <CalendarIcon className="w-5 h-5 mr-2" />
+          <span>{time}</span>
+        </div>
+
+        <a
+          href={contestLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-4 flex items-center text-blue-500 hover:underline"
+        >
+          <LinkIcon className="w-5 h-5 mr-2" />
+          Register for Contest
+        </a>
+      </CardContent>
+    </Card>
   );
 };
 
-export default ContestCard;
+export default LeetcodeUpcoming;

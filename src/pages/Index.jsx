@@ -63,66 +63,115 @@ function Contests() {
     fetchContests();
   }, []);
 
+  // Function to render contests section
+  const renderContestSection = (title, data, Component, emptyMessage = "No contests found.") => (
+    <>
+      <h2 className="text-3xl font-bold mb-4">{title}</h2>
+      {loading ? (
+        <ContestLoadingSkeleton />
+      ) : data.length > 0 ? (
+        data.map((contest, index) => (
+          <Component key={index} contest={contest} />
+        ))
+      ) : (
+        <p className="text-gray-500">{emptyMessage}</p>
+      )}
+    </>
+  );
+
+  // Function to render contests section for LeetCode (different prop pattern)
+  const renderLeetcodePast = (title, data, Component, emptyMessage = "No contests found.") => (
+    <>
+      <h2 className="text-3xl font-bold mb-4">{title}</h2>
+      {loading ? (
+        <ContestLoadingSkeleton />
+      ) : data.length > 0 ? (
+        data.map((contest, index) => (
+          <Component key={index} {...contest} />
+        ))
+      ) : (
+        <p className="text-gray-500">{emptyMessage}</p>
+      )}
+    </>
+  );
+
+  const renderLeetCodeupcomming = (title, data, Component, emptyMessage = "No contests found.") => (
+  <>
+    <h2 className="text-3xl font-bold mb-4">{title}</h2>
+    {loading ? (
+      <ContestLoadingSkeleton />
+    ) : data.length > 0 ? (
+      data.map((contest, index) => (
+        <Component key={index} contest={contest} />
+      ))
+    ) : (
+      <p className="text-gray-500">{emptyMessage}</p>
+    )}
+  </>
+);
+
   return (
     <div className="min-h-screen bg-gray-100">
       <Navbar />
 
       <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Codeforces Contests */}
-        <h2 className="text-3xl font-bold mb-4">Codeforces Contests</h2>
-        {loading ? (
-          <ContestLoadingSkeleton />
-        ) : contests.codeforces.upcoming.length > 0 ? (
-          contests.codeforces.upcoming.map((contest, index) => (
-            <CodeForces key={index} contest={contest} />
-          ))
-        ) : (
-          <p className="text-gray-500">No upcoming contests found.</p>
-        )}
+        {/* Codeforces Section */}
+        <div className="mb-12">
+          {renderContestSection(
+            "Upcoming Codeforces Contests",
+            contests.codeforces.upcoming,
+            CodeForces,
+            "No upcoming Codeforces contests found."
+          )}
+          
+          {renderContestSection(
+            "Past Codeforces Contests",
+            contests.codeforces.past,
+            CodeForces,
+            "No past Codeforces contests found."
+          )}
+        </div>
 
-        {/* LeetCode Contests */}
-        <h2 className="text-3xl font-bold mt-8 mb-4">LeetCode Contests</h2>
-        {loading ? (
-          <ContestLoadingSkeleton />
-        ) : contests.leetcode.upcoming.length > 0 ? (
-          contests.leetcode.upcoming.map((contest, index) => (
-            <LeetcodeUpcooming key={index} {...contest} />
-          ))
-        ) : (
-          <p className="text-gray-500">No upcoming contests found.</p>
-        )}
-        {loading ? (
-          <ContestLoadingSkeleton />
-        ) : contests.leetcode.past.length > 0 ? (
-          contests.leetcode.past.map((contest, index) => (
-            <PastContestCard key={index} {...contest} />
-          ))
-        ) : (
-          <p className="text-gray-500">No past contests found.</p>
-        )}
+        {/* LeetCode Section */}
+        
+        <div className="mb-12">
+          {renderLeetCodeupcomming(
+            "Upcoming LeetCode Contests",
+            contests.leetcode.upcoming,
+            LeetcodeUpcooming,
+            "No upcoming LeetCode contests found."
+          )}
+          
+          {renderLeetcodePast(
+            "Past LeetCode Contests",
+            contests.leetcode.past,
+            PastContestCard,
+            "No past LeetCode contests found."
+          )}
+        </div>
 
-        {/* CodeChef Upcoming Contests */}
-        <h2 className="text-3xl font-bold mt-8 mb-4">CodeChef Contests</h2>
-        {loading ? (
-          <ContestLoadingSkeleton />
-        ) : contests.codechef.upcoming.length > 0 ? (
-          contests.codechef.upcoming.map((contest, index) => (
-            <Codechef_upcomming key={index} contest={contest} />
-          ))
-        ) : (
-          <p className="text-gray-500">No upcoming contests found.</p>
-        )}
+        {/* CodeChef Section */}
+        <div className="mb-12">
+          {renderContestSection(
+            "Upcoming CodeChef Contests",
+            contests.codechef.upcoming,
+            Codechef_upcomming,
+            "No upcoming CodeChef contests found."
+          )}
+          
+          {renderContestSection(
+            "Past CodeChef Contests",
+            contests.codechef.past,
+            CodeChef_past,
+            "No past CodeChef contests found."
+          )}
+        </div>
 
-        {/* CodeChef Past Contests */}
-        <h2 className="text-3xl font-bold mt-8 mb-4">Past CodeChef Contests</h2>
-        {loading ? (
-          <ContestLoadingSkeleton />
-        ) : contests.codechef.past.length > 0 ? (
-          contests.codechef.past.map((contest, index) => (
-            <CodeChef_past key={index} contest={contest} />
-          ))
-        ) : (
-          <p className="text-gray-500">No past contests found.</p>
+        {/* Display error if any */}
+        {error && (
+          <div className="mt-4 p-4 bg-red-100 text-red-700 rounded-md">
+            {error}
+          </div>
         )}
       </div>
     </div>
