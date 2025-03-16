@@ -6,7 +6,7 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import { useState } from "react";
-
+import AddYoutube from './pages/Addyoutoube.jsx'
 const App = () => {
   const [token, setToken] = useState("");
   const [contest, setContest]=useState([]);
@@ -14,10 +14,11 @@ const App = () => {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/contests" element={<Index setContest={setContest} token={token} />} />
-        <Route path="/bookmarks" element={<BookmarkedContests contest={contest} token={token} />} />
+        <Route path="/contests" element={<Index setContest={setContest} token={token} contest={contest} />} />
+        <Route path="/bookmarks" element={<BookmarkedContests contest={contest} token={token}  />} />
         <Route path="/login" element={<Login setToken={setToken} />} />
         <Route path="/signup" element={<Signup setToken={setToken} />} />
+        <Route path='/addyoutube' element={<AddYoutube contest={contest}></AddYoutube>}></Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
