@@ -18,6 +18,17 @@ interface LoginFormData {
   password: string;
 }
 
+const saveContestsToStorage = (token) => {
+  try {
+    // Use localStorage instead of cookies for reliable object storage
+    localStorage.setItem("token", JSON.stringify(token));
+    return true;
+  } catch (err) {
+    console.error("Error saving contests to storage:", err);
+    return false;
+  }
+};
+
 const Login = (props) => {
   const navigate = useNavigate(); // Moved inside the component
 
@@ -47,6 +58,7 @@ const Login = (props) => {
       if (data.success) {
         props.setToken(data.authToken);
         console.log("Token received:", data.authToken);
+        saveContestsToStorage(data.authToken);
         navigate("/contests"); // Navigate to contests page
       } else {
         console.error("Login failed");

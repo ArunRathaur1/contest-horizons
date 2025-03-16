@@ -8,7 +8,7 @@ const LeetcodeUpcoming = ({ contest }) => {
     return null;
   }
 
-  const { contestName, startsIn, time, contestLink } = contest;
+  const { contestName, startsIn, time, contestLink,youtubeLink } = contest;
   return (
     <Card className="w-96 p-4 border border-gray-200 shadow-md rounded-2xl mb-4">
       <CardContent>
@@ -33,6 +33,16 @@ const LeetcodeUpcoming = ({ contest }) => {
           <LinkIcon className="w-5 h-5 mr-2" />
           Register for Contest
         </a>
+        {youtubeLink != null && (
+          <a
+            href={youtubeLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-500 hover:underline"
+          >
+            youtubeLink
+          </a>
+        )}
       </CardContent>
     </Card>
   );

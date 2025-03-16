@@ -18,7 +18,7 @@ const App = () => {
         <Route path="/bookmarks" element={<BookmarkedContests contest={contest} token={token}  />} />
         <Route path="/login" element={<Login setToken={setToken} />} />
         <Route path="/signup" element={<Signup setToken={setToken} />} />
-        <Route path='/addyoutube' element={<AddYoutube contest={contest}></AddYoutube>}></Route>
+        <Route path='/addyoutube_password12345' element={<AddYoutube contest={contest}></AddYoutube>}></Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>

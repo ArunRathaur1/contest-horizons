@@ -34,15 +34,47 @@ export default function AddYoutube() {
     setSearchTerm(contest.name || ""); // Add fallback in case name is undefined
   };
   
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!selectedContest || !youtubeLink) {
-      alert("Please select a contest and enter a YouTube link.");
-      return;
-    }
-    console.log("Selected Contest:", selectedContest);
-    console.log("YouTube Link:", youtubeLink);
+
+  
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  if (!selectedContest || !youtubeLink) {
+    alert("Please select a contest and enter a YouTube link.");
+    return;
+  }
+
+  // Ensure selectedContest is a string (extract name)
+  const requestData = {
+    name: typeof selectedContest === "object" ? selectedContest.name : selectedContest,
+    link: youtubeLink,
   };
+
+  try {
+    const response = await fetch("http://localhost:5000/api/auth/addyoutube", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestData),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      console.log("Success:", data);
+      alert("YouTube link submitted successfully!");
+    } else {
+      console.error("Error:", data);
+      alert("Failed to submit the link.");
+    }
+  } catch (error) {
+    console.error("Request error:", error);
+    alert("An error occurred while submitting.");
+  }
+};
+
+
   
   // Corrected search logic with null checks
   const getAllContests = () => {
@@ -156,7 +188,6 @@ export default function AddYoutube() {
                       <h4 className="text-sm font-semibold">Accepted formats:</h4>
                       <ul className="text-xs space-y-1">
                         <li>• Full URL: https://www.youtube.com/watch?v=VIDEOID</li>
-                        <li>• Short URL: https://youtu.be/VIDEOID</li>
                       </ul>
                     </div>
                   </HoverCardContent>
@@ -175,16 +206,12 @@ export default function AddYoutube() {
                 />
               </div>
             </div>
-          
-            <CardFooter className="px-0 pt-2 pb-0 flex justify-end">
-              <Button 
-                type="submit" 
-                className="bg-indigo-600 hover:bg-indigo-700 text-white w-full sm:w-auto"
-              >
-                <Youtube className="mr-2 h-4 w-4" />
-                Submit Solution
-              </Button>
-            </CardFooter>
+            <div style={{ display: 'flex', justifyContent: 'center', paddingTop:"50px" }}>
+            <Button className="bg-gradient-to-r from-indigo-600 to-indigo-800 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300" style={{width:"200px"}}>
+              Submit Solution
+            </Button>
+          </div>
+
           </form>
         </CardContent>
       </Card>

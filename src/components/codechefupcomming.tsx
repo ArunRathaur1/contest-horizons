@@ -13,6 +13,14 @@ function CodeChefUpcoming( {contest} ) {
       >
         Visit Contest
       </a>
+      {contest.youtubeLink!=null&&<a
+        href={contest.youtubeLink}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-blue-500 hover:underline"
+      >
+        youtubeLink
+      </a>}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import CodeForcesCard from "./cardcodeforces";
 import CodeChefCard from "./codechefcard";
@@ -12,7 +12,6 @@ interface ContestListProps {
   loading: boolean;
   platform: string;
   emptyMessage?: string;
-  token: string;
 }
 
 const ContestList = ({
@@ -21,16 +20,28 @@ const ContestList = ({
   loading,
   platform,
   emptyMessage = "No contests found.",
-  token,
 }: ContestListProps) => {
+  const [token, setToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem("token");
+    setToken(storedToken); // Set token from local storage
+  }, []);
+
   // Bookmark function
   const handleBookmark = async (contest: any) => {
+    if (!token) {
+      console.error("No token found in local storage.");
+      return;
+    }
+
     try {
+      const auth=token.slice(1,token.length-1);
       const response = await fetch("http://localhost:5000/api/auth/bookmark", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: token,
+          Authorization: auth,
         },
         body: JSON.stringify({ contest }), // Sending full contest object
       });
@@ -67,6 +78,7 @@ const ContestList = ({
         <button
           className="absolute top-2 right-2 bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition"
           onClick={() => handleBookmark(contest)} // Pass full contest object
+          disabled={!token} // Disable button if token is not available
         >
           Bookmark
         </button>

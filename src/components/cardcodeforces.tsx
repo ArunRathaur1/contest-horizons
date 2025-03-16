@@ -66,6 +66,16 @@ const ContestCard = ({ contest, onBookmarkToggle, index }) => {
           >
             Visit Contest <ExternalLink className="h-3.5 w-3.5 ml-1" />
           </a>
+          {contest.youtubeLink != null && (
+            <a
+              href={contest.youtubeLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 hover:underline"
+            >
+              youtubeLink
+            </a>
+          )}
 
           <button
             onClick={onBookmarkToggle}

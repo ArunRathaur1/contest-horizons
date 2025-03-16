@@ -76,78 +76,73 @@ function Contests(props) {
   };
 
   useEffect(() => {
-    async function fetchContests() {
-        setLoading(true);
+  async function fetchContests() {
+    setLoading(true);
+    try {
+      const [cfRes, lcRes, ccRes, ytRes] = await Promise.all([
+        fetch(API_URLS.codeforces).then((res) => res.json()),
+        fetch(API_URLS.leetcode).then((res) => res.json()),
+        fetch(API_URLS.codechef).then((res) => res.json()),
+        fetch("http://localhost:5000/api/auth/getyoutube").then((res) => res.json()),
+      ]);
 
-        try {
-            const [cfRes, lcRes, ccRes] = await Promise.all([
-                fetch(API_URLS.codeforces).then((res) => res.json()),
-                fetch(API_URLS.leetcode).then((res) => res.json()),
-                fetch(API_URLS.codechef).then((res) => res.json()),
-            ]);
+      // Create a mapping of contest names to YouTube links
+      const youtubeLinksMap = {};
+      if (ytRes.success || ytRes.data) {
+        // Use ytRes.data directly as it's the array of YouTube links
+        const youtubeData = ytRes.data || [];
+        youtubeData.forEach((yt) => {
+          youtubeLinksMap[yt.name] = yt.link; // Mapping contest name -> YouTube link
+        });
+      }
+      console.log(youtubeLinksMap);
 
-            const processContests = (contestArray, isBookmarked) => {
-                return contestArray.map(contest => ({
-                    ...contest,
-                    id: contest.id || `${contest.name || contest.contestName}-${contest.startTime || contest.time}`,
-                    isBookmarked: isBookmarked(contest),
-                }));
-            };
+      const processContests = (contestArray, platform) => {
+        return contestArray.map(contest => {
+          // Get contest name based on platform-specific property
+          const contestName = contest.name || contest.contestName || "";
+          const contestId = contest.id || `${contestName}-${contest.startTime || contest.time}`;
+          
+          return {
+            ...contest,
+            id: contestId,
+            isBookmarked: bookmarks.includes(contestId),
+            youtubeLink: youtubeLinksMap[contestName] || null, // Assign YouTube link if available
+            platform // Add platform info for future reference
+          };
+        });
+      };
 
-            const isBookmarked = (contest) => {
-                const contestId = contest.id || `${contest.name || contest.contestName}-${contest.startTime || contest.time}`;
-                return bookmarks.includes(contestId);
-            };
+      const updatedContests = {
+        codeforces: {
+          upcoming: cfRes.success ? processContests(cfRes.upcomingContests || [], 'codeforces') : [],
+          past: cfRes.success ? processContests(cfRes.pastContests || [], 'codeforces') : [],
+        },
+        leetcode: {
+          upcoming: lcRes.success ? processContests(lcRes.upcomingContests || [], 'leetcode') : [],
+          past: lcRes.success ? processContests(lcRes.pastContests || [], 'leetcode') : [],
+        },
+        codechef: {
+          upcoming: ccRes.success ? processContests(ccRes.upcomingContests || [], 'codechef') : [],
+          past: ccRes.success ? processContests(ccRes.pastContests || [], 'codechef') : [],
+        },
+      };
 
-            const updatedContests = {
-                codeforces: {
-                    upcoming: cfRes.success ? processContests(cfRes.upcomingContests || [], isBookmarked) : [],
-                    past: cfRes.success ? processContests(cfRes.pastContests || [], isBookmarked) : [],
-                },
-                leetcode: {
-                    upcoming: lcRes.success ? processContests(lcRes.upcomingContests || [], isBookmarked) : [],
-                    past: lcRes.success ? processContests(lcRes.pastContests || [], isBookmarked) : [],
-                },
-                codechef: {
-                    upcoming: ccRes.success ? processContests(ccRes.upcomingContests || [], isBookmarked) : [],
-                    past: ccRes.success ? processContests(ccRes.pastContests || [], isBookmarked) : [],
-                },
-            };
-            
-            // Store the updated contests in state
-            setContests(updatedContests);
-            
-            // Save to storage
-            saveContestsToStorage(updatedContests);
-            
-            // Also save to cookies in a more reliable way if needed
-            try {
-                // Stringifying twice to ensure it's treated as a string
-                // This is a workaround for js-cookie's handling of objects
-                const contestsString = JSON.stringify(JSON.stringify(updatedContests));
-                Cookies.set("contestStringified", contestsString, { expires: 7 });
-                
-                // Print the saved data for debugging
-                console.log("Saved contest data:", updatedContests);
-                console.log("Storage check:", loadContestsFromStorage());
-            } catch (err) {
-                console.error("Error with cookies:", err);
-            }
-            
-            // Pass to parent component if needed
-            if (props.setContest) {
-                props.setContest(updatedContests);
-            }
-        } catch (err) {
-            setError("Failed to load contests.");
-            console.error("Error fetching contests:", err);
-        } finally {
-            setLoading(false);
-        }
+      setContests(updatedContests);
+      saveContestsToStorage(updatedContests);
+      console.log("Contests with YouTube links:", updatedContests);
+    } catch (err) {
+      setError("Failed to load contests.");
+      console.error("Error fetching contests:", err);
+    } finally {
+      setLoading(false);
     }
+  }
 
-    fetchContests();
+  fetchContests();
 }, [bookmarks]);
+
+
 
   const filteredContests = filterContests(
     contests,

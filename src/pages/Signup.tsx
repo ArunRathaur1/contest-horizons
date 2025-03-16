@@ -12,7 +12,16 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { User } from "@/utils/types";
-
+const saveContestsToStorage = (token) => {
+  try {
+    // Use localStorage instead of cookies for reliable object storage
+    localStorage.setItem("token", JSON.stringify(token));
+    return true;
+  } catch (err) {
+    console.error("Error saving contests to storage:", err);
+    return false;
+  }
+};
 const Signup = (props) => {
   const [formData, setFormData] = useState<User>({
     name: "",
@@ -44,6 +53,7 @@ const Signup = (props) => {
       if (data.success) {
         props.setToken(data.authToken);
         console.log("Token received:", data.authToken);
+        saveContestsToStorage(data.authToken);
         navigate("/contests"); // Navigate to contests page
       } else {
         console.error("Signup failed");
