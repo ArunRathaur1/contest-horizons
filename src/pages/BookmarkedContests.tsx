@@ -1,63 +1,57 @@
 import React, { useEffect, useState } from "react";
 import AppNavbar from "../components/AppNavbar";
-import { Contest } from "@/utils/types";
 
-const BookmarkedContests = () => {
-  const [bookmarkedContests, setBookmarkedContests] = useState<Contest[]>([]);
+const BookmarkedContests = ({ token }) => {
+  const [bookmarkedContests, setBookmarkedContests] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const savedBookmarks = localStorage.getItem("contestBookmarks");
-    if (savedBookmarks) {
-      const bookmarkedIds = JSON.parse(savedBookmarks);
-      // Fetch contest details based on bookmarkedIds (replace with your actual data fetching logic)
-      // For now, let's assume you have a function to fetch contest details by ID
-      const fetchContestDetails = async (id: string) => {
-        // Replace this with your actual API endpoint
-        // const response = await fetch(`/api/contests/${id}`);
-        // const data = await response.json();
-        // return data;
-
-        // Mock data for demonstration
-        return new Promise<Contest>((resolve) => {
-          setTimeout(() => {
-            resolve({
-              id: id,
-              name: `Contest ${id}`,
-              url: "https://example.com",
-              startTime: new Date().toISOString(),
-              endTime: new Date().toISOString(),
-              duration: "2 hours",
-              platform: "Sample Platform",
-              status: "UPCOMING",
-              bookmarked: true,
-            });
-          }, 500); // Simulate API delay
-        });
-      };
-
-      const loadBookmarkedContests = async () => {
-        setLoading(true);
-        const contests = await Promise.all(
-          bookmarkedIds.map((id: string) => fetchContestDetails(id))
+    const fetchBookmarkedContests = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:5000/api/auth/fetchuser",
+          {
+            method: "POST",
+            headers: {
+              Authorization: token,
+              "Content-Type": "application/json",
+            },
+          }
         );
-        setBookmarkedContests(contests.filter(Boolean) as Contest[]);
-        setLoading(false);
-      };
 
-      loadBookmarkedContests();
-    } else {
-      setLoading(false);
-    }
-  }, []);
+        const data = await response.json();
+
+        if (response.ok) {
+          console.log("Fetched User Data:", data);
+
+          const validContests = (data.bookmark || []).filter(
+            (contest) => contest && (contest.name || contest.contestName)
+          );
+
+          setBookmarkedContests(validContests);
+        } else {
+          console.error(
+            "Failed to fetch bookmarks:",
+            data.message || "Unknown error"
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching bookmarked contests:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBookmarkedContests();
+  }, [token]);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <AppNavbar />
-        <div className="container mx-auto p-4">
+        <div className="container mx-auto p-4 text-center">
           <h1 className="text-2xl font-bold mb-4">Bookmarked Contests</h1>
-          <p>Loading...</p>
+          <p className="text-gray-600 dark:text-gray-300">Loading...</p>
         </div>
       </div>
     );
@@ -66,20 +60,60 @@ const BookmarkedContests = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <AppNavbar />
-
       <div className="container mx-auto p-4">
         <h1 className="text-2xl font-bold mb-4">Bookmarked Contests</h1>
         {bookmarkedContests.length === 0 ? (
-          <p>No bookmarked contests found.</p>
+          <p className="text-gray-600 dark:text-gray-300">
+            No bookmarked contests found.
+          </p>
         ) : (
-          <ul>
-            {bookmarkedContests.map((contest) => (
-              <li key={contest.id} className="mb-2 p-3 rounded shadow-sm bg-white dark:bg-gray-800">
-                <a href={contest.url} target="_blank" rel="noopener noreferrer">
-                  {contest.name}
-                </a>
-              </li>
-            ))}
+          <ul className="space-y-4">
+            {bookmarkedContests.map((contest, index) => {
+              const contestName =
+                contest.name || contest.contestName || "Unnamed Contest";
+              const contestLink = contest.link || contest.contestLink;
+              const startTime =
+                contest.formattedStartTime ||
+                contest.time ||
+                contest.timeInfo ||
+                "Unknown";
+              const duration = contest.formattedDuration || "N/A";
+              const startsIn = contest.daysUntil
+                ? `${contest.daysUntil} days`
+                : contest.startsIn || "N/A";
+
+              return (
+                <li
+                  key={index}
+                  className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md"
+                >
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    {contestName}
+                  </h2>
+                  {contestLink && (
+                    <p>
+                      <a
+                        href={contestLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-500 underline"
+                      >
+                        Contest Link
+                      </a>
+                    </p>
+                  )}
+                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                    Start Time: {startTime}
+                  </p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                    Duration: {duration}
+                  </p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                    Starts In: {startsIn}
+                  </p>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>

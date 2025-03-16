@@ -9,13 +9,13 @@ import { useState } from "react";
 
 const App = () => {
   const [token, setToken] = useState("");
-
+  const [contest, setContest]=useState([]);
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/contests" element={<Index />} />
-        <Route path="/bookmarks" element={<BookmarkedContests />} />
+        <Route path="/contests" element={<Index setContest={setContest} token={token} />} />
+        <Route path="/bookmarks" element={<BookmarkedContests contest={contest} token={token} />} />
         <Route path="/login" element={<Login setToken={setToken} />} />
         <Route path="/signup" element={<Signup setToken={setToken} />} />
         <Route path="*" element={<NotFound />} />

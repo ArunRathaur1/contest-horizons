@@ -10,7 +10,7 @@ const API_URLS = {
   codechef: "http://localhost:5000/api/contest/codechef",
 };
 
-function Contests() {
+function Contests(props) {
   const [contests, setContests] = useState({
     codeforces: { upcoming: [], past: [] },
     leetcode: { upcoming: [], past: [] },
@@ -40,56 +40,65 @@ function Contests() {
     localStorage.setItem("contestBookmarks", JSON.stringify(newBookmarks));
   };
 
-  useEffect(() => {
-    async function fetchContests() {
-      setLoading(true);
+ useEffect(() => {
+  async function fetchContests() {
+    setLoading(true);
 
-      try {
-        // Make parallel API calls
-        const [cfRes, lcRes, ccRes] = await Promise.all([
-          fetch(API_URLS.codeforces).then((res) => res.json()),
-          fetch(API_URLS.leetcode).then((res) => res.json()),
-          fetch(API_URLS.codechef).then((res) => res.json()),
-        ]);
+    try {
+      // Make parallel API calls
+      const [cfRes, lcRes, ccRes] = await Promise.all([
+        fetch(API_URLS.codeforces).then((res) => res.json()),
+        fetch(API_URLS.leetcode).then((res) => res.json()),
+        fetch(API_URLS.codechef).then((res) => res.json()),
+      ]);
 
-        // Add bookmark status to contests
-        const processContests = (contestArray, isBookmarked) => {
-          return contestArray.map(contest => ({
-            ...contest,
-            id: contest.id || `${contest.name || contest.contestName}-${contest.startTime || contest.time}`,
-            isBookmarked: isBookmarked(contest)
-          }));
-        };
+      // Function to process contest data and check bookmarks
+      const processContests = (contestArray, isBookmarked) => {
+        return contestArray.map(contest => ({
+          ...contest,
+          id: contest.id || `${contest.name || contest.contestName}-${contest.startTime || contest.time}`,
+          isBookmarked: isBookmarked(contest),
+        }));
+      };
 
-        const isBookmarked = (contest) => {
-          const contestId = contest.id || `${contest.name || contest.contestName}-${contest.startTime || contest.time}`;
-          return bookmarks.includes(contestId);
-        };
+      const isBookmarked = (contest) => {
+        const contestId = contest.id || `${contest.name || contest.contestName}-${contest.startTime || contest.time}`;
+        return bookmarks.includes(contestId);
+      };
 
-        setContests({
-          codeforces: {
-            upcoming: cfRes.success ? processContests(cfRes.upcomingContests || [], isBookmarked) : [],
-            past: cfRes.success ? processContests(cfRes.pastContests || [], isBookmarked) : [],
-          },
-          leetcode: {
-            upcoming: lcRes.success ? processContests(lcRes.upcomingContests || [], isBookmarked) : [],
-            past: lcRes.success ? processContests(lcRes.pastContests || [], isBookmarked) : [],
-          },
-          codechef: {
-            upcoming: ccRes.success ? processContests(ccRes.upcomingContests || [], isBookmarked) : [],
-            past: ccRes.success ? processContests(ccRes.pastContests || [], isBookmarked) : [],
-          },
-        });
-      } catch (err) {
-        setError("Failed to load contests.");
-        console.error("Error fetching contests:", err);
-      } finally {
-        setLoading(false);
-      }
+      // Create the new contest data object
+      const updatedContests = {
+        codeforces: {
+          upcoming: cfRes.success ? processContests(cfRes.upcomingContests || [], isBookmarked) : [],
+          past: cfRes.success ? processContests(cfRes.pastContests || [], isBookmarked) : [],
+        },
+        leetcode: {
+          upcoming: lcRes.success ? processContests(lcRes.upcomingContests || [], isBookmarked) : [],
+          past: lcRes.success ? processContests(lcRes.pastContests || [], isBookmarked) : [],
+        },
+        codechef: {
+          upcoming: ccRes.success ? processContests(ccRes.upcomingContests || [], isBookmarked) : [],
+          past: ccRes.success ? processContests(ccRes.pastContests || [], isBookmarked) : [],
+        },
+      };
+
+      // Set the updated contest data
+      setContests(updatedContests);
+
+      // Call props.setContest only after setting the contests
+      props.setContest(updatedContests);
+
+    } catch (err) {
+      setError("Failed to load contests.");
+      console.error("Error fetching contests:", err);
+    } finally {
+      setLoading(false);
     }
+  }
 
-    fetchContests();
-  }, [bookmarks]);
+  fetchContests();
+}, [bookmarks]);
+
 
   // Apply filters
   const filteredContests = filterContests(
@@ -122,6 +131,7 @@ function Contests() {
           platform="codeforces"
           emptyMessage="No upcoming Codeforces contests found."
           onBookmarkToggle={toggleBookmark}
+          token={props.token}
         />
 
         <ContestList
@@ -130,6 +140,7 @@ function Contests() {
           loading={loading}
           platform="leetcode"
           emptyMessage="No upcoming LeetCode contests found."
+          token={props.token}
         />
 
         <ContestList
@@ -139,6 +150,7 @@ function Contests() {
           platform="codechef"
           emptyMessage="No upcoming CodeChef contests found."
           onBookmarkToggle={toggleBookmark}
+          token={props.token}
         />
 
         {/* Past Contests */}
@@ -149,6 +161,7 @@ function Contests() {
           platform="codeforces"
           emptyMessage="No past Codeforces contests found."
           onBookmarkToggle={toggleBookmark}
+          token={props.token}
         />
 
         <ContestList
@@ -157,6 +170,7 @@ function Contests() {
           loading={loading}
           platform="leetcode"
           emptyMessage="No past LeetCode contests found."
+          token={props.token}
         />
 
         <ContestList
@@ -166,6 +180,7 @@ function Contests() {
           platform="codechef"
           emptyMessage="No past CodeChef contests found."
           onBookmarkToggle={toggleBookmark}
+          token={props.token}
         />
       </div>
     </div>

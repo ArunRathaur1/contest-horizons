@@ -1,10 +1,17 @@
-
+import { useNavigate } from "react-router-dom";
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 interface LoginFormData {
   email: string;
@@ -12,6 +19,8 @@ interface LoginFormData {
 }
 
 const Login = (props) => {
+  const navigate = useNavigate(); // Moved inside the component
+
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
     password: "",
@@ -22,16 +31,38 @@ const Login = (props) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Login Data:", formData);
+
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        props.setToken(data.authToken);
+        console.log("Token received:", data.authToken);
+        navigate("/contests"); // Navigate to contests page
+      } else {
+        console.error("Login failed");
+      }
+    } catch (error) {
+      console.error("Error during login:", error);
+    }
   };
 
   return (
     <div className="container mx-auto flex items-center justify-center min-h-[80vh] px-4">
       <Card className="w-full max-w-md animate-fade-in">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Login</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">
+            Login
+          </CardTitle>
           <CardDescription className="text-center">
             Enter your email and password to sign in
           </CardDescription>

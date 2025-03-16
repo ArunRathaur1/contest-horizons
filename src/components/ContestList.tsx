@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card } from "@/components/ui/card";
 import CodeForcesCard from "./cardcodeforces";
@@ -13,58 +12,72 @@ interface ContestListProps {
   loading: boolean;
   platform: string;
   emptyMessage?: string;
-  onBookmarkToggle?: (contestId: string) => void;
+  token: string;
 }
 
-const ContestList: React.FC<ContestListProps> = ({
+const ContestList = ({
   title,
   contests,
   loading,
   platform,
   emptyMessage = "No contests found.",
-  onBookmarkToggle,
-}) => {
+  token,
+}: ContestListProps) => {
+  // Bookmark function
+  const handleBookmark = async (contest: any) => {
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/bookmark", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token,
+        },
+        body: JSON.stringify({ contest }), // Sending full contest object
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log(`Successfully bookmarked contest:`, contest);
+      } else {
+        console.error(
+          "Failed to bookmark contest:",
+          data.message || "Unknown error"
+        );
+      }
+    } catch (error) {
+      console.error("Error while bookmarking contest:", error);
+    }
+  };
+
   // Select the appropriate component based on platform
   const renderContest = (contest: any, index: number) => {
-    switch (platform) {
-      case "codeforces":
-        return (
-          <CodeForcesCard 
-            key={contest.id || index} 
-            contest={contest} 
-            onBookmarkToggle={() => onBookmarkToggle && onBookmarkToggle(contest.id)}
-            index={index}
-          />
-        );
-      case "codechef":
-        return (
-          <CodeChefCard 
-            key={contest.id || index} 
-            contest={contest} 
-            onBookmarkToggle={() => onBookmarkToggle && onBookmarkToggle(contest.id)}
-          />
-        );
-      case "leetcode":
-        return contest.startsIn ? (
-          <LeetcodeUpcoming 
-            key={contest.id || index} 
-            contest={contest} 
-          />
-        ) : (
-          <PastContestCard 
-            key={contest.id || index} 
-            {...contest} 
-          />
-        );
-      default:
-        return null;
-    }
+    return (
+      <div key={contest.id || index} className="relative">
+        {platform === "codeforces" && <CodeForcesCard contest={contest} />}
+        {platform === "codechef" && <CodeChefCard contest={contest} />}
+        {platform === "leetcode" &&
+          (contest.startsIn ? (
+            <LeetcodeUpcoming contest={contest} />
+          ) : (
+            <PastContestCard {...contest} />
+          ))}
+
+        {/* Bookmark Button */}
+        <button
+          className="absolute top-2 right-2 bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition"
+          onClick={() => handleBookmark(contest)} // Pass full contest object
+        >
+          Bookmark
+        </button>
+      </div>
+    );
   };
 
   return (
     <div className="mb-8">
       <h2 className="text-2xl font-bold mb-4">{title}</h2>
-      
+
       {loading ? (
         <ContestLoadingSkeleton />
       ) : contests.length > 0 ? (

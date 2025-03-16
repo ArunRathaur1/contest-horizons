@@ -9,7 +9,6 @@ const LeetcodeUpcoming = ({ contest }) => {
   }
 
   const { contestName, startsIn, time, contestLink } = contest;
-  console.log(contest);
   return (
     <Card className="w-96 p-4 border border-gray-200 shadow-md rounded-2xl mb-4">
       <CardContent>
