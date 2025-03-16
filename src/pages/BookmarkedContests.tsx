@@ -1,5 +1,10 @@
+
 import React, { useEffect, useState } from "react";
 import AppNavbar from "../components/AppNavbar";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Bookmark, Calendar, Clock, ExternalLink } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
 const BookmarkedContests = ({ token }) => {
   const [bookmarkedContests, setBookmarkedContests] = useState([]);
@@ -47,27 +52,44 @@ const BookmarkedContests = ({ token }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-background">
         <AppNavbar />
-        <div className="container mx-auto p-4 text-center">
-          <h1 className="text-2xl font-bold mb-4">Bookmarked Contests</h1>
-          <p className="text-gray-600 dark:text-gray-300">Loading...</p>
+        <div className="container mx-auto p-8 text-center">
+          <div className="flex items-center justify-center mb-8">
+            <Bookmark className="w-8 h-8 text-primary mr-2" />
+            <h1 className="text-3xl font-bold">Your Bookmarked Contests</h1>
+          </div>
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 animate-pulse">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="h-48 bg-muted/50"></Card>
+            ))}
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-background">
       <AppNavbar />
-      <div className="container mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-4">Bookmarked Contests</h1>
+      <div className="container mx-auto p-4 md:p-8">
+        <div className="flex items-center justify-center mb-8">
+          <Bookmark className="w-8 h-8 text-primary mr-2" />
+          <h1 className="text-3xl font-bold">Your Bookmarked Contests</h1>
+        </div>
+        
         {bookmarkedContests.length === 0 ? (
-          <p className="text-gray-600 dark:text-gray-300">
-            No bookmarked contests found.
-          </p>
+          <div className="text-center py-16 animate-fade-in">
+            <div className="mb-4 inline-flex">
+              <Bookmark className="w-16 h-16 text-muted-foreground" />
+            </div>
+            <h2 className="text-xl font-semibold mb-2">No bookmarked contests yet</h2>
+            <p className="text-muted-foreground max-w-md mx-auto">
+              You haven't bookmarked any contests. Go to the contests page to explore and bookmark contests you're interested in.
+            </p>
+          </div>
         ) : (
-          <ul className="space-y-4">
+          <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {bookmarkedContests.map((contest, index) => {
               const contestName =
                 contest.name || contest.contestName || "Unnamed Contest";
@@ -81,40 +103,61 @@ const BookmarkedContests = ({ token }) => {
               const startsIn = contest.daysUntil
                 ? `${contest.daysUntil} days`
                 : contest.startsIn || "N/A";
+              const platform = contest.platform || "Coding Platform";
 
               return (
-                <li
-                  key={index}
-                  className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md"
+                <Card 
+                  key={index} 
+                  className="overflow-hidden hover:shadow-lg transition-all duration-300 animate-fade-in card-hover"
+                  style={{animationDelay: `${index * 100}ms`}}
                 >
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {contestName}
-                  </h2>
-                  {contestLink && (
-                    <p>
-                      <a
-                        href={contestLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-500 underline"
-                      >
-                        Contest Link
-                      </a>
-                    </p>
-                  )}
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
-                    Start Time: {startTime}
-                  </p>
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
-                    Duration: {duration}
-                  </p>
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
-                    Starts In: {startsIn}
-                  </p>
-                </li>
+                  <div className="p-5">
+                    <div className="flex justify-between items-start mb-3">
+                      <h2 className="text-lg font-bold line-clamp-2 flex-1">
+                        {contestName}
+                      </h2>
+                      <Badge variant="outline" className="ml-2 shrink-0">
+                        {platform}
+                      </Badge>
+                    </div>
+                    
+                    <Separator className="my-3" />
+                    
+                    <div className="space-y-2">
+                      <div className="flex items-center text-sm">
+                        <Calendar className="w-4 h-4 mr-2 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">
+                          {startTime}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center text-sm">
+                        <Clock className="w-4 h-4 mr-2 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">
+                          Duration: {duration}
+                        </span>
+                      </div>
+                      
+                      <div className="mt-4 flex justify-between items-center">
+                        <Badge variant="secondary">{startsIn}</Badge>
+                        {contestLink && (
+                          <a
+                            href={contestLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center text-primary hover:underline text-sm"
+                          >
+                            Contest Link
+                            <ExternalLink className="ml-1 w-3 h-3" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </Card>
               );
             })}
-          </ul>
+          </div>
         )}
       </div>
     </div>
